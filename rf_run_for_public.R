@@ -79,8 +79,14 @@ result$FCH4_RF_residual <- ifelse(is.na(result$FCH4),NA,result$FCH4_RF_model - r
 
 # time series
 result$DateTime <- as.POSIXct(df$DateTime, format = "%Y-%m-%d %H:%M")
-plot(result$DateTime,result$FCH4_RF_filled)
-points(result$DateTime,result$FCH4,col="red")
+
+result %>% ggplot(aes(DateTime,FCH4)) + geom_point() + 
+	theme_bw() + ylab(expression(paste("FCH4 (nmol ", m^-2,s^-1,")")))
+result %>% ggplot(aes(DateTime,FCH4_RF_filled)) + geom_point(color="red",alpha=0.5) +
+	geom_point(aes(DateTime,FCH4),color="black")+
+	theme_bw() + ylab(expression(paste("FCH4 (nmol ", m^-2,s^-1,")")))
+
+
 
 # whole data comparison
 ggplot(result, aes(x = FCH4, y =FCH4_RF_model)) + geom_abline(slope = 1, intercept = 0)+
