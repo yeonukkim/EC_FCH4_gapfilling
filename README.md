@@ -3,7 +3,7 @@
 This repository contains examples code related to eddy covariance FCH4 gap-filling. 
 For more information about the approach, see the article:
 
-Kim, Y., Johnson, M. S., Knox, S., Black, A. T., Dalmagro, H. J., Kang, M., . . . Baldocchi, D. (resubmitted). Gap-filling approaches for eddy covariance methane fluxes: a comparison of three machine learning algorithms and a traditional method with principal component analysis. Global Change Biology. 
+Kim, Y., Johnson, M. S., Knox, S., Black, A. T., Dalmagro, H. J., Kang, M., Kim, J., Baldocchi, D. (accepted). Gap-filling approaches for eddy covariance methane fluxes: a comparison of three machine learning algorithms and a traditional method with principal component analysis. Global Change Biology. 
 
 ## Explanation on files
 rf_run_for_public.R: 
