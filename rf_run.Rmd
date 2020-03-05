@@ -1,0 +1,128 @@
+---
+title: "Random forest flux gap-filling"
+author: "Yeonuk Kim"
+date: "June 2020"
+output:
+  html_document:
+    toc: true
+    toc_depth: 3
+    toc_float:
+      collapsed: false
+      smooth_scroll: false
+---
+
+load libraries
+```{r}
+# load libraries
+library(tidyverse)
+library(caret)
+```
+
+
+# load dataset
+# df includes FCH4 and predictor variables.
+# FCH4 should be quality controlled. Other variables should be fully gap-filled.
+```{r}
+df <- read.csv("exampleWETBB.csv") 
+head(df)
+```
+
+
+```{r}
+# variable we need for FCH4 gap-filling
+predictors <- c("FCH4", "Ustar","NEE","LE","H","Rg","Tair","Tsoil5cm","Tsoil10cm","Tsoil50cm",
+								"rH","VPD","WTH","Pa","LWOUT","s","c","Day")
+
+plot(df$Day,df$FCH4)
+plot(df$Day,df$Tair)
+plot(df$Day,df$s)
+
+```
+
+
+
+```{r}
+# variable we need for FCH4 gap-filling
+predictors <- c("FCH4", "Ustar","NEE","LE","H","Rg","Tair","Tsoil5cm","Tsoil10cm","Tsoil50cm",
+								"rH","VPD","WTH","Pa","LWOUT","s","c","Day")
+ML.df <- df %>% select(predictors)
+
+# period when FCH4 is not missing
+wm_only <- ML.df[!is.na(ML.df$FCH4), ]
+
+# 75% of data used for model tuning/validation
+index <- createDataPartition(wm_only$FCH4, p=0.75, list=F) 
+train_set <- wm_only[index,]
+test_set <- wm_only[-index,]
+```
+
+
+
+```{r}
+
+# Create tune-grid to search over hyperparameter combinations
+tgrid <- data.frame(mtry = c(3,6,9,12))
+
+# Create trainControl object
+myControl <- trainControl(
+  method = "cv",
+  number = 3
+)
+
+#### random forest model with mtry tuning
+#Add parallel processing for the fast processing if you want to
+# library(parallel)
+# library(doParallel)
+# cluster <- makeCluster(6)
+# registerDoParallel(cluster)
+RF_FCH4 <- train(FCH4 ~ ., data = train_set[,predictors],
+								 method = "rf",
+								 preProcess = c("medianImpute"),                #impute missing met data with median
+								 trControl = myControl,
+								 tuneGrid = tgrid,
+								 na.action = na.pass,
+								 allowParallel=F, # This requires parallel packages. Otherwise you can choose FALSE.
+								 ntree=200, # can generate more trees
+								 importance = TRUE)
+print(RF_FCH4$bestTune)
+print(RF_FCH4$results)
+```
+
+# Results
+```{r}
+# variable importance
+plot(varImp(RF_FCH4, scale = FALSE), main="variable importance")
+```
+
+
+```{r}
+#generate FCH4_rf predictions for testset
+test_set$FCH4_rf <- predict(RF_FCH4, test_set, na.action = na.pass)
+regrRF <- lm(test_set$FCH4_rf ~ test_set$FCH4); 
+print(summary(regrRF))
+ggplot(test_set, aes(x=FCH4_rf,y=FCH4)) + geom_abline(slope = 1, intercept = 0)+
+	geom_point() + geom_smooth(method = "lm") + ggtitle("testset")
+```
+
+
+
+```{r}
+
+# whole dataset
+result <- data.frame(FCH4 = ML.df$FCH4) # you can add datetime column here if you want to.
+result$FCH4_RF_model <- predict(RF_FCH4, ML.df, na.action = na.pass) # FCH4 RF model
+result$FCH4_RF_filled <- ifelse(is.na(result$FCH4),result$FCH4_RF_model,result$FCH4) # gap-filled column (true value when it is, gap-filled value when missing)
+result$FCH4_RF_residual <- ifelse(is.na(result$FCH4),NA,result$FCH4_RF_model - result$FCH4) # residual (model - obs). can be used for random uncertainty analysis
+
+
+# time series
+result$DateTime <- as.POSIXct(df$DateTime, format = "%Y-%m-%d %H:%M")
+
+result %>% ggplot(aes(DateTime,FCH4)) + geom_point() + 
+	theme_bw() + ylab(expression(paste("FCH4 (nmol ", m^-2,s^-1,")")))
+result %>% ggplot(aes(DateTime,FCH4_RF_filled)) + geom_point(color="red",alpha=0.5) +
+	geom_point(aes(DateTime,FCH4),color="black")+
+	theme_bw() + ylab(expression(paste("FCH4 (nmol ", m^-2,s^-1,")")))
+
+
+```
