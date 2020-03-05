@@ -65,7 +65,7 @@ RF_FCH4 <- train(FCH4 ~ ., data = train_set[,predictors],
 plot(varImp(RF_FCH4, scale = FALSE), main="variable importance")
 
 #generate FCH4_rf predictions for testset
-test_set$FCH4_rf <- predict(RF_FCH4, test_set)
+test_set$FCH4_rf <- predict(RF_FCH4, test_set, na.action = na.pass)
 regrRF <- lm(test_set$FCH4_rf ~ test_set$FCH4); 
 print(summary(regrRF))
 ggplot(test_set, aes(x=FCH4, y=FCH4_rf)) + geom_abline(slope = 1, intercept = 0)+
@@ -73,7 +73,7 @@ ggplot(test_set, aes(x=FCH4, y=FCH4_rf)) + geom_abline(slope = 1, intercept = 0)
 
 # whole dataset
 result <- data.frame(FCH4 = ML.df$FCH4) # you can add datetime column here if you want to.
-result$FCH4_RF_model <- predict(RF_FCH4, ML.df) # FCH4 RF model
+result$FCH4_RF_model <- predict(RF_FCH4, ML.df, na.action = na.pass) # FCH4 RF model
 result$FCH4_RF_filled <- ifelse(is.na(result$FCH4),result$FCH4_RF_model,result$FCH4) # gap-filled column (true value when it is, gap-filled value when missing)
 result$FCH4_RF_residual <- ifelse(is.na(result$FCH4),NA,result$FCH4_RF_model - result$FCH4) # residual (model - obs). can be used for random uncertainty analysis
 
