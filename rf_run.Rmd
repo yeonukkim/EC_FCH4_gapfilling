@@ -19,9 +19,9 @@ library(caret)
 ```
 
 
-# load dataset
-# df includes FCH4 and predictor variables.
-# FCH4 should be quality controlled. Other variables should be fully gap-filled.
+load dataset
+df includes FCH4 and predictor variables.
+FCH4 should be quality controlled. Other variables should be fully gap-filled.
 ```{r}
 df <- read.csv("exampleWETBB.csv") 
 head(df)

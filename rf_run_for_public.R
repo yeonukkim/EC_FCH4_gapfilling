@@ -28,7 +28,8 @@ test_set <- wm_only[-index,]
 ############### Random forest run
 
 #### option 1. random forest model with mtry tuning
-#Add parallel processing for the fast processing if you want to
+# tgrid <- data.frame(mtry = c(3,6,9,12))
+# #Add parallel processing for the fast processing if you want to
 # library(parallel)
 # library(doParallel)
 # cluster <- makeCluster(6)
@@ -39,6 +40,7 @@ test_set <- wm_only[-index,]
 # 								 trControl=trainControl(method = "repeatedcv",   #three-fold cross-validation for model parameters 3 times
 # 								 											number = 3,                #other option: "cv" without repetition
 # 								 											repeats = 3),
+# 								 tuneGrid = tgrid,
 # 								 na.action = na.pass,
 # 								 allowParallel=TRUE, # This requires parallel packages. Otherwise you can choose FALSE.
 # 								 ntree=400, # can generate more trees
